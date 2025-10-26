@@ -255,21 +255,36 @@ func Example() {
 		},
 	}))
 
+	// Set the default logger for clog
+	clog.SetDefault(logger)
+
 	// Create contexts with different loggers
 	ctx := context.Background()
-	ctx = clog.WithLogger(ctx, logger)
 
 	// Log to different contexts
-	clog.Info(ctx, "Application started", "service", "api")
+	clog.Debug(ctx, "Application starting up", "version", "1.0.0")
+	clog.Info(ctx, "Application started", "service", "api", "port", 8080)
 
 	// Create a request context with additional attributes
 	requestCtx := clog.With(ctx, "request_id", "req-123", "user_id", "user-456")
-	clog.Info(requestCtx, "Processing user request")
+	clog.Info(requestCtx, "Processing user request", "method", "GET", "path", "/users")
 
 	// Create a database context with a group
 	dbCtx := clog.WithGroup(requestCtx, "database")
 	clog.Info(dbCtx, "Query executed", "table", "users", "duration_ms", 45)
+	clog.Debug(dbCtx, "Query details", "rows_affected", 1, "cache_hit", true)
 
-	fmt.Println("Structured logging with context-aware clog package")
-	// Output: Structured logging with context-aware clog package
+	// Test different log levels
+	clog.Warn(ctx, "High memory usage detected", "memory_mb", 512, "threshold_mb", 500)
+	clog.Error(ctx, "Failed to connect to database", "error", "connection timeout", "retries", 3)
+
+	// Print all captured output
+	fmt.Print(buf.String())
+	// Output: level=DEBUG msg="Application starting up" version=1.0.0
+	// level=INFO msg="Application started" service=api port=8080
+	// level=INFO msg="Processing user request" request_id=req-123 user_id=user-456 method=GET path=/users
+	// level=INFO msg="Query executed" request_id=req-123 user_id=user-456 database.table=users database.duration_ms=45
+	// level=DEBUG msg="Query details" request_id=req-123 user_id=user-456 database.rows_affected=1 database.cache_hit=true
+	// level=WARN msg="High memory usage detected" memory_mb=512 threshold_mb=500
+	// level=ERROR msg="Failed to connect to database" error="connection timeout" retries=3
 }
