@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 func TestSetDefault(t *testing.T) {
 	// Create a buffer to capture log output
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	// Set the default logger
 	clog.SetDefault(logger)
@@ -32,8 +31,8 @@ func TestSetDefault(t *testing.T) {
 func TestWithLogger(t *testing.T) {
 	// Create two different loggers with different prefixes
 	var buf1, buf2 bytes.Buffer
-	logger1 := slog.New(slog.NewTextHandler(&buf1, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	logger2 := slog.New(slog.NewTextHandler(&buf2, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger1 := clog.New(clog.NewTextHandler(&buf1, &clog.HandlerOptions{Level: clog.LevelDebug}))
+	logger2 := clog.New(clog.NewTextHandler(&buf2, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	// Set default logger
 	clog.SetDefault(logger1)
@@ -69,29 +68,29 @@ func TestWithLogger(t *testing.T) {
 
 func TestEnabled(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelWarn}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelWarn}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
 
 	// Test that debug level is not enabled when logger is set to warn level
-	if clog.Enabled(ctx, slog.LevelDebug) {
+	if clog.Enabled(ctx, clog.LevelDebug) {
 		t.Error("Expected debug level to be disabled")
 	}
 
 	// Test that warn level is enabled
-	if !clog.Enabled(ctx, slog.LevelWarn) {
+	if !clog.Enabled(ctx, clog.LevelWarn) {
 		t.Error("Expected warn level to be enabled")
 	}
 
 	// Test that error level is enabled
-	if !clog.Enabled(ctx, slog.LevelError) {
+	if !clog.Enabled(ctx, clog.LevelError) {
 		t.Error("Expected error level to be enabled")
 	}
 }
 
 func TestLogLevels(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
 
@@ -114,12 +113,12 @@ func TestLogLevels(t *testing.T) {
 
 func TestLog(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
 
 	// Test generic Log function
-	clog.Log(ctx, slog.LevelInfo, "generic log message", "key", "value")
+	clog.Log(ctx, clog.LevelInfo, "generic log message", "key", "value")
 
 	output := buf.String()
 	if !strings.Contains(output, "generic log message") {
@@ -129,16 +128,16 @@ func TestLog(t *testing.T) {
 
 func TestLogAttrs(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
 
 	// Test LogAttrs function
-	attrs := []slog.Attr{
-		slog.String("key1", "value1"),
-		slog.Int("key2", 42),
+	attrs := []clog.Attr{
+		clog.String("key1", "value1"),
+		clog.Int("key2", 42),
 	}
-	clog.LogAttrs(ctx, slog.LevelInfo, "attrs message", attrs...)
+	clog.LogAttrs(ctx, clog.LevelInfo, "attrs message", attrs...)
 
 	output := buf.String()
 	if !strings.Contains(output, "attrs message") {
@@ -154,7 +153,7 @@ func TestLogAttrs(t *testing.T) {
 
 func TestWithGroup(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
 	ctxWithGroup := clog.WithGroup(ctx, "testgroup")
@@ -174,12 +173,12 @@ func TestWithGroup(t *testing.T) {
 
 func TestWithAttrs(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
-	attrs := []slog.Attr{
-		slog.String("service", "test"),
-		slog.Int("version", 1),
+	attrs := []clog.Attr{
+		clog.String("service", "test"),
+		clog.Int("version", 1),
 	}
 	ctxWithAttrs := clog.WithAttrs(ctx, attrs...)
 
@@ -200,7 +199,7 @@ func TestWithAttrs(t *testing.T) {
 
 func TestWith(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	ctx := clog.WithLogger(context.Background(), logger)
 	ctxWith := clog.With(ctx, "user", "john", "session", "abc123")
@@ -222,7 +221,7 @@ func TestWith(t *testing.T) {
 
 func TestContextPropagation(t *testing.T) {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{Level: clog.LevelDebug}))
 
 	// Test that context values are preserved through multiple operations
 	ctx := context.Background()
@@ -245,11 +244,11 @@ func TestContextPropagation(t *testing.T) {
 func Example() {
 	// Create a buffer to capture output for this example
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.TimeKey {
-				return slog.Attr{}
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{
+		Level: clog.LevelDebug,
+		ReplaceAttr: func(groups []string, a clog.Attr) clog.Attr {
+			if a.Key == clog.TimeKey {
+				return clog.Attr{}
 			}
 			return a
 		},
