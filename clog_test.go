@@ -240,7 +240,124 @@ func TestContextPropagation(t *testing.T) {
 	}
 }
 
-// Example demonstrates using different loggers in different contexts
+// ExampleSetDefault demonstrates setting up a default logger.
+// Once set, all clog functions use it automatically — no need to import slog.
+func ExampleSetDefault() {
+	var buf bytes.Buffer
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{
+		Level: clog.LevelInfo,
+		ReplaceAttr: func(groups []string, a clog.Attr) clog.Attr {
+			if a.Key == clog.TimeKey {
+				return clog.Attr{}
+			}
+			return a
+		},
+	}))
+
+	clog.SetDefault(logger)
+
+	ctx := context.Background()
+	clog.Info(ctx, "server started", "addr", ":8080")
+	clog.Warn(ctx, "cache miss", "key", "user:42")
+
+	fmt.Print(buf.String())
+	// Output: level=INFO msg="server started" addr=:8080
+	// level=WARN msg="cache miss" key=user:42
+}
+
+// ExampleWith demonstrates adding request-scoped key-value pairs to a context.
+// Every subsequent log call with that context includes the added attributes.
+func ExampleWith() {
+	var buf bytes.Buffer
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{
+		ReplaceAttr: func(groups []string, a clog.Attr) clog.Attr {
+			if a.Key == clog.TimeKey {
+				return clog.Attr{}
+			}
+			return a
+		},
+	}))
+
+	ctx := clog.WithLogger(context.Background(), logger)
+	ctx = clog.With(ctx, "request_id", "abc-123")
+
+	clog.Info(ctx, "handling request", "method", "GET")
+	clog.Info(ctx, "request complete", "status", 200)
+
+	fmt.Print(buf.String())
+	// Output: level=INFO msg="handling request" request_id=abc-123 method=GET
+	// level=INFO msg="request complete" request_id=abc-123 status=200
+}
+
+// ExampleWithGroup demonstrates grouping attributes under a namespace.
+// Attributes logged within the group are prefixed with the group name.
+func ExampleWithGroup() {
+	var buf bytes.Buffer
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{
+		ReplaceAttr: func(groups []string, a clog.Attr) clog.Attr {
+			if a.Key == clog.TimeKey {
+				return clog.Attr{}
+			}
+			return a
+		},
+	}))
+
+	ctx := clog.WithLogger(context.Background(), logger)
+	dbCtx := clog.WithGroup(ctx, "db")
+
+	clog.Info(dbCtx, "query executed", "table", "users", "duration_ms", 12)
+
+	fmt.Print(buf.String())
+	// Output: level=INFO msg="query executed" db.table=users db.duration_ms=12
+}
+
+// ExampleWithAttrs demonstrates pre-setting typed attributes on a context.
+// This is like With but accepts clog.Attr values for type safety.
+func ExampleWithAttrs() {
+	var buf bytes.Buffer
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{
+		ReplaceAttr: func(groups []string, a clog.Attr) clog.Attr {
+			if a.Key == clog.TimeKey {
+				return clog.Attr{}
+			}
+			return a
+		},
+	}))
+
+	ctx := clog.WithLogger(context.Background(), logger)
+	ctx = clog.WithAttrs(ctx,
+		clog.String("service", "billing"),
+		clog.Int("version", 3),
+	)
+
+	clog.Info(ctx, "invoice created", "amount", 99.50)
+
+	fmt.Print(buf.String())
+	// Output: level=INFO msg="invoice created" service=billing version=3 amount=99.5
+}
+
+// ExampleWithLogger demonstrates attaching a specific logger to a context.
+// Different parts of an application can use different loggers.
+func ExampleWithLogger() {
+	var buf bytes.Buffer
+	logger := clog.New(clog.NewTextHandler(&buf, &clog.HandlerOptions{
+		Level: clog.LevelDebug,
+		ReplaceAttr: func(groups []string, a clog.Attr) clog.Attr {
+			if a.Key == clog.TimeKey {
+				return clog.Attr{}
+			}
+			return a
+		},
+	}))
+
+	ctx := clog.WithLogger(context.Background(), logger)
+	clog.Debug(ctx, "verbose tracing enabled", "component", "auth")
+
+	fmt.Print(buf.String())
+	// Output: level=DEBUG msg="verbose tracing enabled" component=auth
+}
+
+// Example demonstrates a complete usage scenario with context propagation.
 func Example() {
 	// Create a buffer to capture output for this example
 	var buf bytes.Buffer
